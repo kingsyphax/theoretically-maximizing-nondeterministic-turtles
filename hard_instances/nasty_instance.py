@@ -3,31 +3,31 @@
 import sys
 import random
 
-def make_turtle(starting):
-    """Return children and adjacencies for a turtle, beginning at vertex
+def make_nasty(starting):
+    """Return children and adjacencies for a nasty, beginning at vertex
     number STARTING.
     """
 
     children = set()
     adjacencies = set()
 
-    for i in range(5):
-        children.add(starting + i) # node in central cycle
-        adjacencies.add((starting + i, starting + ((i + 1) % 5))) # central cycle edges 
+    for i in range(3):
+        new_starting = starting + i * 5 + 1
+        adjacencies.add((starting, new_starting)) # beginning of cycle
 
-        new_starting = starting + (i + 1) * 5
-        adjacencies.add((starting + i, new_starting))
-        for x in range(3):
-            adjacencies.add((new_starting + x, new_starting + x + 1)) # outer cycle edges 
-        adjacencies.add((new_starting + 3, starting + i))
+        for x in range(4):
+            children.add(new_starting + x) # cycle is children
+            adjacencies.add((new_starting + x, new_starting + x + 1)) # cycle edges 
+        children.add(new_starting + 4)
+        adjacencies.add((new_starting + 4, starting)) # end of cycle
 
     return children, adjacencies
 
 
-def generate_turtle_instance(n):
-    """Generate a N-vertex turtle instance"""
+def generate_nasty_instance(n):
+    """Generate a N-vertex nasty instance"""
 
-    filename = "turtle_instance_%d.in" % (n)
+    filename = "nasty_instance_%d.in" % (n)
     output_file = open(filename, "w")
 
     output_file.write("%d\n" % (n)) # number of vertices
@@ -35,13 +35,13 @@ def generate_turtle_instance(n):
     children = set()
     adjacencies = set()
 
-    for i in range(n // 25):
-        new_children, new_adjacencies = make_turtle(25 * i)
+    for i in range(n // 16):
+        new_children, new_adjacencies = make_nasty(16 * i)
         children |= new_children # union in (extend)
         adjacencies |= new_adjacencies
 
-    if n % 25 > 5:
-        starting = 25 * (n // 25)
+    if n % 16 > 5:
+        starting = 16 * (n // 16)
         for x in range(starting, n - 1):
             children.add(x)
             adjacencies.add((x, x + 1))
@@ -68,4 +68,4 @@ def generate_turtle_instance(n):
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
-        generate_turtle_instance(int(sys.argv[1]))
+        generate_nasty_instance(int(sys.argv[1]))
