@@ -8,7 +8,44 @@ neighbors = None # adjacency list representation
 n = None # size
 
 
+def remove(i):
+    """Completely remove vertex I, as if it had never been.
+    Shifts numbers of all later vertices down by 1."""
+
+    # update adjacencies
+    
+    del adjacencies[i] # remove all adjacencies FROM vertex i (shifting down all farther indices)
+
+    for j in range(len(adjacencies)):
+        del adjacencies[j][i] # remove all adjacencies TO vertex i
+    
+    # update neighbors
+
+    del neighbors[i] # remove set of vertex i's neighbors
+
+    for j in range(n - 1):
+        if i in neighbors[j]: # i is no longer anyone's neighbor
+            neighbors[j].remove(i) 
+        for x in range(i + 1, n): # renumber neighbors who are vertices that come after i
+            if x in neighbors[j]:
+                neighbors[j].remove(x)
+                neighbors[j].add(x - 1)
+
+    # update n
+    n -= 1 # graph is one smaller duh
+
+
+def remove_all(s):
+    """Completely remove all vertices in the set S."""
+    for i in sorted(s)[::-1]: # remove in reverse order, so that the removal of one
+                              # vertex does not change the names of other vertices
+        remove(i)
+
+
 def in_a_cycle(i):
+    """Returns whether or not vertex I is in a cycle of size <= 5.
+    (Does not consider SCCs.)"""
+
     visited = set()
     in_cycle = [False]
 
@@ -26,6 +63,21 @@ def in_a_cycle(i):
 
     explore(i, 0)
     return in_cycle[0]
+
+
+def gonna_die():
+    """Returns all people (vertices) who are definitely going to die."""
+    dooomed = set()
+    for i in range(n):
+        if not in_a_cycle(i):
+            dooomed.add(i)
+    return dooomed
+
+
+def remove_not_in_a_cycle():
+    """Remove from adjacencies and neighbors all vertices not in a cycle.
+    (Does not take SCCs into account.)"""
+    remove_all(gonna_die())
 
 
 def get_neighbors(i):
@@ -111,5 +163,4 @@ if __name__ == "__main__":
     for i in range(n):
         adjacencies.append([bool(int(x)) for x in input_file.readline().split()])
         neighbors.append(get_neighbors(i))
-
 
