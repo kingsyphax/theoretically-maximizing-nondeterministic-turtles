@@ -8,10 +8,69 @@ neighbors = None # adjacency list representation
 n = None # size
 
 
+def dfs_post_ordering(adjacencies):
+    """Return a list of the DFS post-number ordering of the graph
+    represented by ADJACENCIES."""
+    def neighbors(v):
+        neighbors = set()
+        for u in range(n):
+            if adjacencies[v][u]:
+                neighbors.add(u)
+        return neighbors
+
+    ordering = []
+
+    visited = set()
+
+    def explore(v):
+        visited.add(v)
+        for u in neighbors(v):
+            if u not in visited:
+                explore(u)
+        ordering.append(v) # count up post number
+
+    while len(visited) < n:
+        explore(min([i for i in range(n) if i not in visited]))
+
+    return ordering
+
+
+def SCCs():
+    """Return a list of sets, representing the SCC decomposition of the graph."""
+    SCCs = []
+
+    reversed_adjacencies = [[0 for j in range(n)] for i in range(n)]
+    for i in range(n):
+        for j in range(n):
+            reversed_adjacencies[i][j] = adjacencies[j][i]
+
+    reversed_post_ordering = dfs_post_ordering(reversed_adjacencies) # all vertices, in the order we'll use for the DFS (sink-first)
+    processed = [] # which vertices have been put in components yet?
+
+    current_component = [] # an SCC we're currently constructing
+
+    visited = set()
+
+    def explore(v):
+        visited.add(v)
+        current_component.append(v)
+        processed.append(v)
+
+        for u in neighbors[v]:
+            if u not in visited:
+                explore(u)
+
+    while len(processed) < n:
+        explore([x for x in reversed_post_ordering if x not in processed][-1]) # explore vertex that comes last in ordering, which hasn't been processed yet
+        SCCs.append(current_component) # this component is finished
+        current_component = [] # start new component
+
+    return SCCs
+
+
 def remove(i):
     """Completely remove vertex I, as if it had never been.
     Shifts numbers of all later vertices down by 1."""
-
     # update adjacencies
     
     del adjacencies[i] # remove all adjacencies FROM vertex i (shifting down all farther indices)
@@ -45,7 +104,6 @@ def remove_all(s):
 def in_a_cycle(i):
     """Returns whether or not vertex I is in a cycle of size <= 5.
     (Does not consider SCCs.)"""
-
     visited = set()
     in_cycle = [False]
 
@@ -82,7 +140,6 @@ def remove_not_in_a_cycle():
 
 def get_neighbors(i):
     """Find adjacency list of vertex I from adjacency matrix (adjacencies)."""
-
     all_neighbors = set()
     for j in range(n):
         if adjacencies[i][j]:

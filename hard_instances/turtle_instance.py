@@ -15,7 +15,7 @@ def make_turtle(starting):
         children.add(starting + i) # node in central cycle
         adjacencies.add((starting + i, starting + ((i + 1) % 5))) # central cycle edges 
 
-        new_starting = starting + (i + 1) * 5
+        new_starting = starting + (i + 1) * 4 + 1
         adjacencies.add((starting + i, new_starting))
         for x in range(3):
             adjacencies.add((new_starting + x, new_starting + x + 1)) # outer cycle edges 
