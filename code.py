@@ -8,8 +8,28 @@ neighbors = None # adjacency list representation
 n = None # size
 
 
+def in_a_cycle(i):
+    visited = set()
+    in_cycle = [False]
+
+    def explore(v, d):
+        if d >= 5:
+            return 
+        if i in neighbors[v]:
+            in_cycle[0] = True
+
+        visited.add(v)
+
+        for n in neighbors[v]:
+            if n not in visited:
+                explore(n, d + 1)
+
+    explore(i, 0)
+    return in_cycle[0]
+
+
 def get_neighbors(i):
-    """Find adjacency list of vertex I from adjacency matrix ADJACENCIES."""
+    """Find adjacency list of vertex I from adjacency matrix (adjacencies)."""
 
     all_neighbors = set()
     for j in range(n):
@@ -21,7 +41,6 @@ def get_neighbors(i):
 def all_cycles(i):
     """Find all cycles of length at most 5 starting from vertex I."""
 
-    all_neighbors = set()
     cycles = []
 
     visited = set()
