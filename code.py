@@ -159,6 +159,8 @@ def in_a_cycle(i):
     visited = set()
     in_cycle = False
 
+    fringe = []
+
     def explore(v, d):
         nonlocal in_cycle
         if d >= 5:
@@ -170,7 +172,10 @@ def in_a_cycle(i):
 
         for n in neighbors[v]:
             if n not in visited:
-                explore(n, d + 1)
+                fringe.append((n, d + 1))
+
+        if len(fringe):
+            explore(*fringe.pop(0))
 
     explore(i, 0)
     return in_cycle
@@ -182,9 +187,12 @@ def in_a_cycle_SCC(i):
     in_cycle = False
 
     s = which_SCC[i]
+
+    fringe = []
     
     def explore(v, d):
         nonlocal in_cycle
+        # print(v, d)
         if d >= 5: 
             return 
         if i in SCC_neighbors[s][v]:
@@ -194,7 +202,10 @@ def in_a_cycle_SCC(i):
 
         for n in SCC_neighbors[s][v]:
             if n not in visited:
-                explore(n, d + 1)
+                fringe.append((n, d + 1))
+
+        if len(fringe):
+            explore(*fringe.pop(0))
 
     explore(i, 0)
     return in_cycle
@@ -440,15 +451,13 @@ def process_and_remove_all():
         del SCCs[0]
 
         generate_SCC_stuff()
-        take_small_SCCs()
+        # take_small_SCCs()
         
         # TESTING YAY
         # print("CYCLES: ", end = "")
         # print(CYCLES)
         # print("SCCs: ", end = "")
         # print(SCCs)
-
-
 
 
 def brute_force(s):
@@ -463,7 +472,6 @@ def brute_force(s):
         else:
             remove(min(S))
     del SCCs[s]
-
 
 
 if __name__ == "__main__":
@@ -506,17 +514,20 @@ if __name__ == "__main__":
 
     generate_SCC_stuff()
 
-    take_small_SCCs()
+    # take_small_SCCs()
 
     process_and_remove_all()
 
-    output_filename = filename[:filename.find(".")] + ".out"
+    output_filename = filename[:filename.find(".in")] + ".out"
 
-    output_file = open(output_filename, "a")
-    for cycle in CYCLES:
+    output_file = open(output_filename, "w")
+    if not len(CYCLES):
+        output_file.write("None")
+    for j in range(len(CYCLES)):
+        cycle = CYCLES[j]
         for i in range(len(cycle)):
             if i == len(cycle) - 1:
-                output_file.write(str(cycle[i]) + "; ")
+                output_file.write(str(cycle[i]) + ("; " if j < len(CYCLES) - 1 else ""))
             else:
                 output_file.write(str(cycle[i]) + " ")
     output_file.write('\n')
