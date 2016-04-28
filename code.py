@@ -497,6 +497,8 @@ if __name__ == "__main__":
         adjacencies.append([bool(int(x)) for x in input_file.readline().split()])
         neighbors.append(get_neighbors(i))
 
+    input_file.close()
+
     # determine SCC decomposition
     generate_SCC_stuff()
 
@@ -508,8 +510,9 @@ if __name__ == "__main__":
 
     process_and_remove_all()
 
+    output_filename = filename[:filename.find(".")] + ".out"
 
-    output_file = open("solutions.out", "a")
+    output_file = open(output_filename, "a")
     for cycle in CYCLES:
         for i in range(len(cycle)):
             if i == len(cycle) - 1:
@@ -519,4 +522,3 @@ if __name__ == "__main__":
     output_file.write('\n')
 
     output_file.close()
-    input_file.close()
