@@ -2,10 +2,12 @@
 
 import sys
 import os
+import random
 
 from functools import reduce
 from operator import mul
 
+children = None # set of children
 adjacencies = None # adjacency matrix representation 
 neighbors = None # adjacency list representation
 n = None # size
@@ -14,6 +16,12 @@ which_SCC = None # mapping of nodes to the SCCs contianing them
 SCC_adjacencies = None # adjacency matrices WITHIN each SCC
 SCC_neighbors = None # adjacency lists WITHIN each SCC
 SCC_n = None # sizes of each SCC
+
+CYCLES = [] # cycles to return!
+
+
+def total_value(vertices):
+    return 2 * len(vertices & children) + len(vertices - children)
 
 
 def is_complete():
@@ -94,8 +102,12 @@ def get_which_SCC():
 
 def remove(i):
     """Remove all connections, etc. from vertex I."""
+    global children
+
+    # update children
+    children -= {i}
+
     # update adjacencies
-    
     adjacencies[i] = [False for _ in range(n)]
 
     for j in range(len(adjacencies)):
@@ -112,13 +124,27 @@ def remove(i):
     # update SCC stuff
     w = which_SCC[i]
     SCCs[w].remove(i)
-    generate_SCC_stuff()
 
 
 def remove_all(s):
     """Completely remove all vertices in the set S."""
+    global children
+
     for i in s:
-        remove(i)
+        children -= {i}
+        adjacencies[i] = [False for _ in range(n)]
+        for j in range(len(adjacencies)):
+            adjacencies[j][i] = False # remove all adjacencies TO vertex i
+
+        # update neighbors
+        neighbors[i] = set() # remove set of vertex i's neighbors
+        for j in range(n):
+            if i in neighbors[j]: # i is no longer anyone's neighbor
+                neighbors[j].remove(i)
+
+        # update SCC stuff
+        w = which_SCC[i]
+        SCCs[w].remove(i)
 
 
 def in_a_cycle(i):
@@ -190,11 +216,13 @@ def remove_not_in_a_cycle():
     """Remove from adjacencies and neighbors all vertices not in a cycle.
     (Does not take SCCs into account.)"""
     remove_all(gonna_die())
+    generate_SCC_stuff()
 
 
 def remove_not_in_a_cycle_SCC():
     """Remove from adjacencies and neighbors all vertices not in a cycle."""
     remove_all(gonna_die_SCC())
+    generate_SCC_stuff()
 
 
 def get_neighbors(i):
@@ -294,13 +322,101 @@ def generate_SCC_stuff():
             for j in SCC:
                 this_adjacencies[i][j] = adjacencies[i][j]
 
-        this_neighbors = [set() for _ in range(this_n)]
+        this_neighbors = [set() for _ in range(n)]
         for i in SCC:
             this_neighbors[i] = {x for x in neighbors[i] if x in SCC}
 
         SCC_adjacencies.append(this_adjacencies)
         SCC_neighbors.append(this_neighbors)
         SCC_n.append(this_n)
+
+
+def take_small_SCCs():
+    """Add all SCCs of size <= 5 to CYCLES, and remove them."""
+
+    to_remove = set()
+
+    for SCC in SCCs:
+        if 0 < len(SCC) <= 5:
+            CYCLES.append(SCC[:]) # add a copy of SCC to CYCLES
+            to_remove |= set(SCC)
+    remove_all(to_remove)
+
+    for i in range(len(SCCs) - 1, -1, -1):
+        if len(SCCs[i]) == 0:
+            del SCCs[i]
+
+
+def random_lowest_outorder(vertices, s):
+    return min(sorted(vertices, key = lambda x: random.random()), key = lambda vertex: len(SCC_neighbors[s][vertex]))
+
+
+def random_cycle(i, vertices):
+    visited = set()
+
+    def explore(v, cycle):
+        visited.add(v)
+
+        if i in neighbors[v] & vertices:
+            return cycle
+
+        if len(cycle) >= 5:
+            return
+
+        for u in sorted(neighbors[v] & vertices, key = lambda x: random.random()):
+            if u not in cycle:
+                new_cycle = explore(u, cycle | {u})
+                if new_cycle:
+                    return new_cycle
+                    
+    return explore(i, {i})
+
+
+
+def process(s):
+    """Do stuff to this SCC."""
+    vertices = SCCs[s]
+
+    values = {}
+    for _ in range(len(vertices) ** 2): # |SCC|^2 because why not
+        cycles = []
+        processed = set()
+        left = set(vertices)
+
+        while True:
+            cycle = None
+            count = 0
+            while not cycle and count < 100:
+                c = random_lowest_outorder(list(left) + list(left & children), s) # weight children * 2
+                cycle = random_cycle(c, left)
+                count += 1
+            if not cycle:
+                break
+
+            cycles.append(tuple(cycle))
+
+            processed |= cycle
+            left -= cycle
+
+        value = total_value(left)
+        values[tuple(cycles)] = value
+
+    return min(values, key = lambda v: values[v])
+
+
+def brute_force(s):
+    """(Badly) brute-force this (hopefully small) SCC."""
+
+    S = SCCs[s]
+    while len(S):
+        if in_a_cycle_SCC(min(S)):
+            cycle = most_valuable_cycle_in_SCC(min(S))
+            CYCLES.append(cycle[:])
+            remove_all(cycle)
+        else:
+            remove(min(S))
+    del SCCs[s]
+
 
 
 if __name__ == "__main__":
@@ -340,3 +456,8 @@ if __name__ == "__main__":
 
     generate_SCC_stuff()
 
+    remove_not_in_a_cycle_SCC()
+
+    take_small_SCCs()
+
+    
