@@ -126,16 +126,17 @@ def remove(i):
     # update SCC stuff
     w = which_SCC[i]
     SCCs[w].remove(i)
+    which_SCC[i] = -1
 
 
 def remove_all(s):
     """Completely remove all vertices in the set S."""
     global children
 
-    for i in s:
+    for i in set(s):
         children -= {i}
         adjacencies[i] = [False for _ in range(n)]
-        for j in range(len(adjacencies)):
+        for j in range(n):
             adjacencies[j][i] = False # remove all adjacencies TO vertex i
 
         # update neighbors
@@ -147,6 +148,7 @@ def remove_all(s):
         # update SCC stuff
         w = which_SCC[i]
         SCCs[w].remove(i)
+        which_SCC[i] = -1
 
         removed.add(i)
 
@@ -399,7 +401,7 @@ def process(s):
         while True:
             cycle = None
             count = 0
-            while not cycle and count < 100:
+            while not cycle and count < 100 and left:
                 c = random_lowest_outorder(list(left) + list(left & children), s) # weight children * 2
                 cycle = random_cycle(c, left)
                 count += 1
@@ -409,23 +411,44 @@ def process(s):
             cycles.append(tuple(cycle))
 
             processed |= cycle
-            left -= cycle
+            left -= cycle # remove all vertices in cycle from left (so they aren't reused)
 
         value = total_value(left)
+        # TESTING YAY
+        # all_vertices = sorted(sum([list(cycle) for cycle in cycles], []))
+        # print(len(all_vertices) - len(set(all_vertices)))
+
         values[tuple(cycles)] = value
 
-    return min(values, key = lambda v: values[v])
+    result = min(values, key = lambda v: values[v])
+    # TESTING YAY
+    # print("DUPLICATES (in process): %d" % (len(result) - len(set(result))))
+    return result
 
 
 def process_and_remove_all():
     while len(SCCs):
         result = process(0)
+
+        # TESTING YAY
+        # print("DUPLICATES (in process_and_remove_all): %d" % (len(result) - len(set(result))))
+
         CYCLES.extend([list(cycle) for cycle in result])
+        # print("REMOVING: ", end = "")
+        # print(SCCs[0])
         remove_all(SCCs[0])
         del SCCs[0]
 
         generate_SCC_stuff()
         take_small_SCCs()
+        
+        # TESTING YAY
+        # print("CYCLES: ", end = "")
+        # print(CYCLES)
+        # print("SCCs: ", end = "")
+        # print(SCCs)
+
+
 
 
 def brute_force(s):
@@ -483,6 +506,6 @@ if __name__ == "__main__":
 
     take_small_SCCs()
 
-    proces_and_remove_all()
+    process_and_remove_all()
 
     
