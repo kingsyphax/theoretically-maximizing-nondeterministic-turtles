@@ -17,6 +17,8 @@ SCC_adjacencies = None # adjacency matrices WITHIN each SCC
 SCC_neighbors = None # adjacency lists WITHIN each SCC
 SCC_n = None # sizes of each SCC
 
+removed = set()
+
 CYCLES = [] # cycles to return!
 
 
@@ -67,7 +69,7 @@ def get_SCCs():
             reversed_adjacencies[i][j] = adjacencies[j][i]
 
     reversed_post_ordering = dfs_post_ordering(reversed_adjacencies) # all vertices, in the order we'll use for the DFS (sink-first)
-    processed = [] # which vertices have been put in components yet?
+    processed = list(removed) # which vertices have been put in components yet?
 
     current_component = [] # an SCC we're currently constructing
 
@@ -145,6 +147,8 @@ def remove_all(s):
         # update SCC stuff
         w = which_SCC[i]
         SCCs[w].remove(i)
+
+        removed.add(i)
 
 
 def in_a_cycle(i):
@@ -308,7 +312,12 @@ def most_valuable_cycle_in_SCC(i):
 
 
 def generate_SCC_stuff():
-    global SCC_adjacencies, SCC_neighbors, SCC_n
+    global SCCs, which_SCC, SCC_adjacencies, SCC_neighbors, SCC_n
+
+    SCCs = get_SCCs()
+
+    which_SCC = get_which_SCC()
+
     # construct copies of adjacencies, neighbors, and n for each SCC
     SCC_adjacencies = [] # adjacency matrices WITHIN each SCC
     SCC_neighbors = [] # adjacency lists WITHIN each SCC
@@ -337,14 +346,18 @@ def take_small_SCCs():
     to_remove = set()
 
     for SCC in SCCs:
-        if 0 < len(SCC) <= 5:
+        if 2 <= len(SCC) <= 5:
             CYCLES.append(SCC[:]) # add a copy of SCC to CYCLES
+            to_remove |= set(SCC)
+        elif len(SCC) == 1:
             to_remove |= set(SCC)
     remove_all(to_remove)
 
     for i in range(len(SCCs) - 1, -1, -1):
         if len(SCCs[i]) == 0:
             del SCCs[i]
+
+    generate_SCC_stuff()
 
 
 def random_lowest_outorder(vertices, s):
@@ -404,6 +417,17 @@ def process(s):
     return min(values, key = lambda v: values[v])
 
 
+def process_and_remove_all():
+    while len(SCCs):
+        result = process(0)
+        CYCLES.extend([list(cycle) for cycle in result])
+        remove_all(SCCs[0])
+        del SCCs[0]
+
+        generate_SCC_stuff()
+        take_small_SCCs()
+
+
 def brute_force(s):
     """(Badly) brute-force this (hopefully small) SCC."""
 
@@ -451,13 +475,14 @@ if __name__ == "__main__":
         neighbors.append(get_neighbors(i))
 
     # determine SCC decomposition
-    SCCs = get_SCCs()
-    which_SCC = get_which_SCC()
-
     generate_SCC_stuff()
 
     remove_not_in_a_cycle_SCC()
 
+    generate_SCC_stuff()
+
     take_small_SCCs()
+
+    proces_and_remove_all()
 
     
