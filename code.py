@@ -466,7 +466,7 @@ def process_and_remove_all():
 Johnson all cycle finding algorithm 
 ###################################
 """
-
+"""
 def getCycles(SCC_adjacencies):
     adjList = SCC_adjacencies # adjacency list 
     B = [] # B-lists???
@@ -530,7 +530,7 @@ def unblock(v):
         bnode.pop(0)
         if blocked[w]:
             unblock(w)
-
+"""
 """
 ###################################
 """
@@ -599,8 +599,6 @@ if __name__ == "__main__":
     # take_small_SCCs()
 
     process_and_remove_all()
-
-    pprint.pprint(SCCs)
 
 
     output_filename = filename[:filename.find(".in")] + ".out"
