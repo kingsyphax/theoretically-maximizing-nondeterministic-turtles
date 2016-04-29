@@ -23,6 +23,10 @@ removed = set()
 CYCLES = [] # cycles to return!
 
 
+def is_a_cycle(lst):
+    return all([adjacencies[lst[i]][lst[(i + 1) % len(lst)]] for i in range(len(lst))])
+
+
 def total_value(vertices):
     return 2 * len(vertices & children) + len(vertices - children)
 
@@ -361,7 +365,7 @@ def take_small_SCCs():
     to_remove = set()
 
     for SCC in SCCs:
-        if 2 <= len(SCC) <= 5:
+        if len(SCC) == 2:
             CYCLES.append(SCC[:]) # add a copy of SCC to CYCLES
             to_remove |= set(SCC)
         elif len(SCC) == 1:
@@ -453,7 +457,7 @@ def process_and_remove_all():
         del SCCs[0]
 
         generate_SCC_stuff()
-        # take_small_SCCs()
+        take_small_SCCs()
         
         # TESTING YAY
         # print("CYCLES: ", end = "")
@@ -477,7 +481,7 @@ def getCycles(SCC_adjacencies):
 
     while True:
         scc_index = which_SCC[s]
-        if scc_index = -1:
+        if scc_index == -1:
             s +=  1
             continue
         scc = SCC_neighbors[scc_index]
@@ -564,6 +568,7 @@ if __name__ == "__main__":
         os._exit(1)
 
     n = int(input_file.readline())
+    orig_n = n
 
     # construct set of children
     children = set(int(c) for c in input_file.readline().split())
@@ -596,9 +601,15 @@ if __name__ == "__main__":
     pprint.pprint(SCCs)
 
 
-    # take_small_SCCs()
+    take_small_SCCs()
 
     process_and_remove_all()
+
+
+    pprint.pprint(SCCs)
+    
+    print("NUMBER IN CYCLES: %d" % (len(set(sum(CYCLES, [])))))
+    print("TOTAL: %d" % (orig_n))
 
 
     output_filename = filename[:filename.find(".in")] + ".out"
