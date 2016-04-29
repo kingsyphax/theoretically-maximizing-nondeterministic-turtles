@@ -311,7 +311,7 @@ def value(cycle):
 
     val = 0
     for x in cycle:
-        if x in children:
+        if x in all_children: # double check this.. it was children before
             val += 2
         else:
             val += 1
@@ -396,12 +396,13 @@ def random_cycle(i, vertices):
             return
 
         for u in sorted(neighbors[v] & vertices, key = lambda x: random.random()):
-            if u not in cycle:
-                new_cycle = explore(u, cycle | {u})
+            cycle_set = set(cycle)
+            if u not in cycle_set:
+                new_cycle = explore(u, cycle + [u])
                 if new_cycle:
                     return new_cycle
                     
-    return explore(i, {i})
+    return explore(i, [i])
 
 
 
@@ -427,8 +428,8 @@ def process(s):
 
             cycles.append(tuple(cycle))
 
-            processed |= cycle
-            left -= cycle # remove all vertices in cycle from left (so they aren't reused)
+            processed |= set(cycle)
+            left -= set(cycle) # remove all vertices in cycle from left (so they aren't reused)
 
         value = total_value(left)
         # TESTING YAY
@@ -560,6 +561,8 @@ if __name__ == "__main__":
 
     filename = sys.argv[1]
 
+    print("processing... " + filename)
+
     input_file = None
     try:
         input_file = open(filename, "r")
@@ -572,6 +575,7 @@ if __name__ == "__main__":
 
     # construct set of children
     children = set(int(c) for c in input_file.readline().split())
+    all_children = set(children)
 
     # construct list of whether is child
     is_child = []
@@ -590,28 +594,22 @@ if __name__ == "__main__":
     # determine SCC decomposition
     generate_SCC_stuff()
 
-    pprint.pprint(SCCs)
+    # pprint.pprint(SCCs)
 
     remove_not_in_a_cycle_SCC()
 
-    pprint.pprint(SCCs)
+    # pprint.pprint(SCCs)
 
     generate_SCC_stuff()
 
-    pprint.pprint(SCCs)
-
+    # pprint.pprint(SCCs)
 
     take_small_SCCs()
 
     process_and_remove_all()
 
-
-    pprint.pprint(SCCs)
+    # pprint.pprint(SCCs)
     
-    print("NUMBER IN CYCLES: %d" % (len(set(sum(CYCLES, [])))))
-    print("TOTAL: %d" % (orig_n))
-
-
     output_filename = filename[:filename.find(".in")] + ".out"
 
     output_file = open(output_filename, "w")
@@ -621,13 +619,26 @@ if __name__ == "__main__":
         cycle = CYCLES[j]
         for i in range(len(cycle)):
             if i == len(cycle) - 1:
-                output_file.write(str(cycle[i]) + ("; " if j < len(CYCLES) - 1 else ""))
+                output_file.write(str(cycle[i]) + ("; " if j < len(CYCLES) - 1 else "\n"))
             else:
                 output_file.write(str(cycle[i]) + " ")
-    output_file.write('\n')
 
     cycles_value = sum([value(cycle) for cycle in CYCLES])
-    output_file.write("value: " + str(cycles_value))
 
+    #####################
+    ## info for report ##
+    #####################
+
+    all_saved = set(sum(CYCLES, []))
+    children_saved = all_saved & all_children
+    adults_saved = all_saved - all_children
+
+    output_file.write("cycles value: %d\n" % cycles_value)
+    output_file.write("# vertices: %d\n" % (orig_n))
+    output_file.write("# total saved: %d\n" % (len(all_saved)))
+    output_file.write("# adults saved: %d\n" % (len(adults_saved)))
+    output_file.write("# children saved: %d\n" % (len(children_saved)))
+
+    ######################
 
     output_file.close()
