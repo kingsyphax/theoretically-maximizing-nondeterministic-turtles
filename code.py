@@ -477,7 +477,7 @@ def getCycles(SCC_adjacencies):
 
     while True:
         scc_index = which_SCC[s]
-        if scc_index = -1:
+        if scc_index == -1:
             s +=  1
             continue
         scc = SCC_neighbors[scc_index]
