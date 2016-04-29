@@ -3,6 +3,7 @@
 import sys
 import os
 import random
+import pprint
 
 from functools import reduce
 from operator import mul
@@ -197,6 +198,7 @@ def in_a_cycle_SCC(i):
             return 
         if i in SCC_neighbors[s][v]:
             in_cycle = True
+            return
 
         visited.add(v)
 
@@ -404,7 +406,7 @@ def process(s):
     vertices = SCCs[s]
 
     values = {}
-    for _ in range(len(vertices) ** 2): # |SCC|^2 because why not
+    for _ in range(len(vertices)*10): # |SCC|^2 because why not
         cycles = []
         processed = set()
         left = set(vertices)
@@ -459,6 +461,79 @@ def process_and_remove_all():
         # print("SCCs: ", end = "")
         # print(SCCs)
 
+"""
+###################################
+Johnson all cycle finding algorithm 
+###################################
+"""
+
+def getCycles(SCC_adjacencies):
+    adjList = SCC_adjacencies # adjacency list 
+    B = [] # B-lists???
+    blocked = [] # blocked nodes
+    stack = []
+    cycles = []
+    s = 0
+
+    while True:
+        scc_index = which_SCC[s]
+        if scc_index = -1:
+            s +=  1
+            continue
+        scc = SCC_neighbors[scc_index]
+        if sccResult:
+            s = min() #?????
+            for i in range(0, len(SCCs[scc_index])):
+                if SCC[i] and len(SCC[i]) > 0:
+                    blocked[i] = False
+                    B[i] = []
+            findCycles(s, s, SCC)
+            s += 1
+        else:
+            break
+    return cycles
+
+
+def findCycles(v, s, adjList):
+    f = False
+    stack.insert(0, v)
+    blocked[v] = True
+
+    for i in range(0, len(adjList[v])):
+        w = adjList[v][i]
+        if w == s:
+            for j in range(0, len(stack)):
+                index = stack[j]
+                cycle.append(graphNodes[index])
+            cycles.append(cycle)
+            f = True
+        elif not blocked[w]:
+            if findCycles(w, s, adjList):
+                f = True
+    if f:
+        unblock(v)
+    else:
+        for i in range(0, len(adjList[v])):
+            w = adjList[v][i]
+            if v in B[w]:
+                B[w].append(v)
+
+    stack.remove(v)
+    return f
+
+
+def unblock(v):
+    blocked[v] = False
+    bnode = B[v]
+    while len(bnode) > 0:
+        w = bnode[0]
+        bnode.pop(0)
+        if blocked[w]:
+            unblock(w)
+
+"""
+###################################
+"""
 
 def brute_force(s):
     """(Badly) brute-force this (hopefully small) SCC."""
@@ -510,13 +585,23 @@ if __name__ == "__main__":
     # determine SCC decomposition
     generate_SCC_stuff()
 
+    pprint.pprint(SCCs)
+
     remove_not_in_a_cycle_SCC()
 
+    pprint.pprint(SCCs)
+
     generate_SCC_stuff()
+
+    pprint.pprint(SCCs)
+
 
     # take_small_SCCs()
 
     process_and_remove_all()
+
+    pprint.pprint(SCCs)
+
 
     output_filename = filename[:filename.find(".in")] + ".out"
 
@@ -531,5 +616,9 @@ if __name__ == "__main__":
             else:
                 output_file.write(str(cycle[i]) + " ")
     output_file.write('\n')
+
+    cycles_value = sum([value(cycle) for cycle in CYCLES])
+    output_file.write("value: " + str(cycles_value))
+
 
     output_file.close()
