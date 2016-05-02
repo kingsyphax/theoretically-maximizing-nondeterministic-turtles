@@ -193,11 +193,10 @@ def in_a_cycle_SCC(i):
 
     s = which_SCC[i]
 
-    fringe = []
+    fringe = [(i, 0)]
     
     def explore(v, d):
         nonlocal in_cycle
-        # print(v, d)
         if d >= 5: 
             return 
         if i in SCC_neighbors[s][v]:
@@ -210,18 +209,36 @@ def in_a_cycle_SCC(i):
             if n not in visited:
                 fringe.append((n, d + 1))
 
-        if len(fringe):
-            explore(*fringe.pop(0))
+    while len(fringe):
+        explore(*fringe.pop(0))
 
-    explore(i, 0)
     return in_cycle
+
+
+def has_cycle(i):
+    stuff = neighbors[i]
+    for _ in range(4):
+            stuff = set(sum([list(neighbors[x]) for x in stuff], []))
+            if i in stuff:
+                    return True
+    return False
+
+
+def has_cycle_SCC(i):
+    s = which_SCC[i]
+    stuff = SCC_neighbors[s][i]
+    for _ in range(4):
+            stuff = set(sum([list(SCC_neighbors[s][x]) for x in stuff], []))
+            if i in stuff:
+                    return True
+    return False
 
 
 def gonna_die():
     """Returns all people (vertices) who are definitely going to die."""
     dooomed = set()
     for i in range(n):
-        if not in_a_cycle(i):
+        if not has_cycle(i):
             dooomed.add(i)
     return dooomed
 
@@ -230,7 +247,7 @@ def gonna_die_SCC():
     """Returns all people (vertices) who are definitely going to die."""
     dooomed = set()
     for i in range(n):
-        if not in_a_cycle_SCC(i):
+        if not has_cycle_SCC(i):
             dooomed.add(i)
     return dooomed
 
@@ -274,8 +291,8 @@ def all_cycles(i):
 
         for u in neighbors[v]:
             if u not in cycle:
-                explore(u, cycle | {u})
-    explore(i, {i})
+                explore(u, cycle + [u])
+    explore(i, [i])
 
     return cycles
 
@@ -299,8 +316,8 @@ def all_cycles_in_SCC(i):
 
         for u in SCC_neighbors[s][v]:
             if u not in cycle:
-                explore(u, cycle | {u})
-    explore(i, {i})
+                explore(u, cycle + [u])
+    explore(i, [i])
 
     return cycles
 
@@ -398,11 +415,11 @@ def random_cycle(i, vertices):
         for u in sorted(neighbors[v] & vertices, key = lambda x: random.random()):
             cycle_set = set(cycle)
             if u not in cycle_set:
-                new_cycle = explore(u, cycle + [u])
+                new_cycle = explore(u, cycle | {u})
                 if new_cycle:
                     return new_cycle
                     
-    return explore(i, [i])
+    return explore(i, {i})
 
 
 
@@ -411,7 +428,7 @@ def process(s):
     vertices = SCCs[s]
 
     values = {}
-    for _ in range(len(vertices)*10): # |SCC|^2 because why not
+    for _ in range(len(vertices)): # |SCC|^2 because why not
         cycles = []
         processed = set()
         left = set(vertices)
