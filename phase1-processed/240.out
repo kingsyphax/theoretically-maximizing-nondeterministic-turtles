@@ -1,6 +1,6 @@
-2 3 4 5 1
-cycles value: 5
+0 2 3 4 5
+cycles value: 6
 # vertices: 6
 # total saved: 5
-# adults saved: 5
-# children saved: 0
+# adults saved: 4
+# children saved: 1

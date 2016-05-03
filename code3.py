@@ -557,110 +557,126 @@ if __name__ == "__main__":
         print("usage: python3 -i code.py [input file]")
         os._exit(1)
 
-    filename = sys.argv[1]
+    while True:
+        filename = sys.argv[1]
 
-    print("processing... " + filename)
+        print("processing... " + filename)
 
-    input_file = None
-    try:
-        input_file = open(filename, "r")
-    except IOError:
-        print("Input file '%s' not found." % (filename))
-        os._exit(1)
+        input_file = None
+        try:
+            input_file = open(filename, "r")
+        except IOError:
+            print("Input file '%s' not found." % (filename))
+            os._exit(1)
 
-    n = int(input_file.readline())
-    orig_n = n
+        n = int(input_file.readline())
+        orig_n = n
 
-    # construct set of children
-    children = set(int(c) for c in input_file.readline().split())
-    all_children = set(children)
+        # construct set of children
+        children = set(int(c) for c in input_file.readline().split())
+        all_children = set(children)
 
-    # construct list of whether is child
-    is_child = []
-    for i in range(n):
-        is_child.append(i in children)
+        # construct list of whether is child
+        is_child = []
+        for i in range(n):
+            is_child.append(i in children)
 
-    # construct adjacency list and adjacency matrix
-    adjacencies = []
-    neighbors = []
-    for i in range(n):
-        adjacencies.append([bool(int(x)) for x in input_file.readline().split()])
-        neighbors.append(get_neighbors(i))
+        # construct adjacency list and adjacency matrix
+        adjacencies = []
+        neighbors = []
+        for i in range(n):
+            adjacencies.append([bool(int(x)) for x in input_file.readline().split()])
+            neighbors.append(get_neighbors(i))
 
-    input_file.close()
+        input_file.close()
 
-    # determine SCC decomposition
-    generate_SCC_stuff()
+        # determine SCC decomposition
+        generate_SCC_stuff()
 
-    # pprint.pprint(SCCs)
+        # pprint.pprint(SCCs)
 
-    remove_not_in_a_cycle_SCC()
+        remove_not_in_a_cycle_SCC()
 
-    # pprint.pprint(SCCs)
+        # pprint.pprint(SCCs)
 
-    generate_SCC_stuff()
+        generate_SCC_stuff()
 
-    # pprint.pprint(SCCs)
+        # pprint.pprint(SCCs)
 
-    take_small_SCCs()
+        take_small_SCCs()
 
-    process_and_remove_all()
+        process_and_remove_all()
 
-    # pprint.pprint(SCCs)
+        # pprint.pprint(SCCs)
 
-    old_cycles_value = None
+        old_cycles_value = None
 
-    output_filename = filename[:filename.find(".in")] + ".out"
+        output_filename = filename[:filename.find(".in")] + ".out"
 
-    try:
-        output_file_input = open(output_filename, "r")
-        line = output_file_input.readline()
-        while line and "cycles value" not in line:
+        try:
+            output_file_input = open(output_filename, "r")
             line = output_file_input.readline()
-        if line:
-            old_cycles_value = int(line.split("cycles value: ")[1].strip())
-        else:
+            while line and "cycles value" not in line:
+                line = output_file_input.readline()
+            if line:
+                old_cycles_value = int(line.split("cycles value: ")[1].strip())
+            else:
+                old_cycles_value = 0
+            output_file_input.close()
+        except FileNotFoundError:
             old_cycles_value = 0
-        output_file_input.close()
-    except FileNotFoundError:
-        old_cycles_value = 0
 
-    print(old_cycles_value)
+        # print(old_cycles_value)
 
-    cycles_value = sum([value(cycle) for cycle in CYCLES])
+        cycles_value = sum([value(cycle) for cycle in CYCLES])
 
-    if cycles_value > old_cycles_value:
-        output_file = open(output_filename, "w")
-        if not len(CYCLES):
-            output_file.write("None\n")
-        for j in range(len(CYCLES)):
-            cycle = CYCLES[j]
-            for i in range(len(cycle)):
-                if i == len(cycle) - 1:
-                    output_file.write(str(cycle[i]) + ("; " if j < len(CYCLES) - 1 else "\n"))
-                else:
-                    output_file.write(str(cycle[i]) + " ")
+        if cycles_value > old_cycles_value:
+            output_file = open(output_filename, "w")
+            if not len(CYCLES):
+                output_file.write("None\n")
+            for j in range(len(CYCLES)):
+                cycle = CYCLES[j]
+                for i in range(len(cycle)):
+                    if i == len(cycle) - 1:
+                        output_file.write(str(cycle[i]) + ("; " if j < len(CYCLES) - 1 else "\n"))
+                    else:
+                        output_file.write(str(cycle[i]) + " ")
 
 
-        #####################
-        ## info for report ##
-        #####################
+            #####################
+            ## info for report ##
+            #####################
 
-        all_saved = set(sum(CYCLES, []))
-        children_saved = all_saved & all_children
-        adults_saved = all_saved - all_children
+            all_saved = set(sum(CYCLES, []))
+            children_saved = all_saved & all_children
+            adults_saved = all_saved - all_children
 
-        output_file.write("cycles value: %d\n" % cycles_value)
-        output_file.write("# vertices: %d\n" % (orig_n))
-        output_file.write("# total saved: %d\n" % (len(all_saved)))
-        output_file.write("# adults saved: %d\n" % (len(adults_saved)))
-        output_file.write("# children saved: %d\n" % (len(children_saved)))
+            output_file.write("cycles value: %d\n" % cycles_value)
+            output_file.write("# vertices: %d\n" % (orig_n))
+            output_file.write("# total saved: %d\n" % (len(all_saved)))
+            output_file.write("# adults saved: %d\n" % (len(adults_saved)))
+            output_file.write("# children saved: %d\n" % (len(children_saved)))
 
-        ######################
+            ######################
 
-        output_file.close()
+            output_file.close()
 
-        changed_file = open("phase1-processed/changed.txt", "a")
-        changed_file.write(output_filename)
-        changed_file.close()
+            changed_file = open("phase1-processed/changed.txt", "a")
+            changed_file.write(output_filename)
+            changed_file.write("\n")
+            changed_file.close()
 
+        children = None # set of children
+        adjacencies = None # adjacency matrix representation 
+        neighbors = None # adjacency list representation
+        n = None # size
+        SCCs = None # list of lists of vertices, representing the SCC decomposition
+        which_SCC = None # mapping of nodes to the SCCs contianing them
+        SCC_adjacencies = None # adjacency matrices WITHIN each SCC
+        SCC_neighbors = None # adjacency lists WITHIN each SCC
+        SCC_n = None # sizes of each SCC
+
+        removed = set()
+
+        CYCLES = [] # cycles to return!
+         
